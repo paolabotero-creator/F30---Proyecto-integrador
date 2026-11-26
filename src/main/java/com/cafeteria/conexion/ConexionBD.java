@@ -6,22 +6,16 @@ import java.sql.SQLException;
 
 public class ConexionBD {
 
-    // URL de conexión a SQLite
-    private static final String URL = "jdbc:sqlite:cafeteria.db";
+    // Probar conexión utilizando la URL ingresada
+    public static String probarConexion(String url) {
 
-    // Probar conexión con la base de datos
-    public static String probarConexion() {
+        if (url == null || url.trim().isEmpty()) {
+            return "Error: La URL de conexión es obligatoria.";
+        }
 
-        try {
-            // Cargar el controlador JDBC
-            Class.forName("org.sqlite.JDBC");
+        try (Connection conexion = obtenerConexion(url)) {
 
-            // Establecer y cerrar la conexión automáticamente
-            try (Connection conexion = DriverManager.getConnection(URL)) {
-
-                return "Conexión a SQLite establecida correctamente.";
-
-            }
+            return "Conexión a SQLite establecida correctamente.";
 
         } catch (ClassNotFoundException e) {
 
@@ -35,15 +29,18 @@ public class ConexionBD {
         }
     }
 
-    // Obtener una conexión abierta con SQLite
-    public static Connection obtenerConexion()
+    // Obtener una conexión abierta utilizando la URL recibida
+    public static Connection obtenerConexion(String url)
             throws ClassNotFoundException, SQLException {
+
+        if (url == null || url.trim().isEmpty()) {
+            throw new SQLException("La URL de conexión está vacía.");
+        }
 
         // Cargar el controlador JDBC
         Class.forName("org.sqlite.JDBC");
 
-        // Devolver la conexión
-        return DriverManager.getConnection(URL);
+        // Establecer conexión
+        return DriverManager.getConnection(url.trim());
     }
-
 }

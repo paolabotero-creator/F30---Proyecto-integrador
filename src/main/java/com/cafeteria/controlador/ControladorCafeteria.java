@@ -1,3 +1,4 @@
+
 package com.cafeteria.controlador;
 
 import com.cafeteria.modelo.CalculadoraDescuento;
@@ -10,24 +11,65 @@ public class ControladorCafeteria {
 
     private final VentanaCafeteria vista;
     private final CalculadoraDescuento calculadora;
+    private boolean conexionVerificada = false;
 
+    // Constructor
     public ControladorCafeteria(VentanaCafeteria vista) {
 
         this.vista = vista;
 
+        // Crear la calculadora con la regla predeterminada
         this.calculadora = new CalculadoraDescuento(
                 CalculadoraDescuento.crearReglaPredeterminada()
         );
 
-        this.vista.getBtnCalcular().addActionListener( //Detecta cuando el usuario presiona el botón
-                e -> calcularPedido() //Expresión lambda para ejecutar el cálculo
-        );
+        // Estado inicial: cálculo deshabilitado y resultados vacíos
+        this.vista.habilitarCalculo(false);
+        this.vista.actualizarEstadoConexion(false);
+        this.vista.mostrarResultado("");
 
-        this.vista.mostrarResultado(
-                ConexionBD.probarConexion() //Conexión JDBC
-        );
+        // Evento del botón Conectar
+        this.vista.getBtnConectar().addActionListener(e -> conectarBD());
+
+        // Evento del botón Calcular descuento
+        this.vista.getBtnCalcular().addActionListener(e -> {
+
+            if (!conexionVerificada) {
+                this.vista.mostrarResultado(
+                        "Debe conectar primero con la base de datos."
+                );
+                return;
+            }
+
+            calcularPedido();
+        });
     }
 
+    // Probar conexión con la URL ingresada
+    private void conectarBD() {
+
+        // Obtener la URL ingresada
+        String url = this.vista.getUrlIngresada();
+
+        // Ejecutar prueba de conexión
+        String resultado = ConexionBD.probarConexion(url);
+
+        // Comprobar el resultado
+        conexionVerificada = resultado.startsWith(
+                "Conexión a SQLite establecida correctamente."
+        );
+
+        // Actualizar el indicador visual
+        this.vista.actualizarEstadoConexion(conexionVerificada);
+
+        // Habilitar o deshabilitar el cálculo
+        this.vista.habilitarCalculo(conexionVerificada);
+
+        // Mostrar mensaje
+        this.vista.mostrarResultado(resultado);
+    }
+
+    // Calcular descuento del pedido
     private void calcularPedido() {
 
         try {
